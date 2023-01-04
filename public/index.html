@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/style.css" />
+    <title>Realtime Chat</title>
+
+    <!-- <script src="js/client.js"></script> -->
+  </head>
+  <body>
+    <nav>
+      <img class="logo" src="chat.png.png" alt="" />
+      <h1>Welcome to Realtime Chat App</h1>
+    </nav>
+    <div class="container"></div>
+    <div class="send">
+      <form action="#" id="sendContainer">
+        <input
+          type="text"
+          name="messageInp"
+          id="messageInp"
+          placeholder="Message"
+        />
+        <button class="btn" type="submit">Send</button>
+      </form>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      // get the DOM elements for respective js variables
+      const form = document.getElementById("sendContainer");
+      const messageInput = document.getElementById("messageInp");
+      const messageContainer = document.querySelector(".container");
+      // audio that will play on receiving message
+      let audio = new Audio("tune.mp3");
+      // function which will append info to the container
+      const append = (message, position) => {
+        const messageElement = document.createElement("div");
+        messageElement.innerText = message;
+        messageElement.classList.add("message");
+        messageElement.classList.add(position);
+        messageContainer.append(messageElement);
+        if (position == "left") {
+          audio.play();
+        }
+      };
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const message = messageInput.value;
+        append(`You: ${message}`, "right");
+        socket.emit("send", message);
+        messageInput.value = "";
+      });
+
+      const name = prompt("Enter you name");
+      socket.emit("new-user-joined", name);
+      // if new user joins let the server know
+      socket.on("user-joined", (name) => {
+        append(`${name} joined the chat`, "right");
+      });
+
+      socket.on("receive", (data) => {
+        append(`${data.name}: ${data.message}`, "left");
+      });
+      socket.on("left", (name) => {
+        append(`${name} left tha chat`, "left");
+      });
+    </script>
+  </body>
+</html>
